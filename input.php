@@ -1,0 +1,331 @@
+<?php
+include 'koneksi.php';
+
+$error = "";
+$success = "";
+
+if(isset($_POST['simpan'])){
+
+    $nim = trim($_POST['nim']);
+    $nama = trim($_POST['nama']);
+    $jurusan = trim($_POST['jurusan']);
+    $alamat = trim($_POST['alamat']);
+
+    // Upload Foto
+    $foto = $_FILES['foto']['name'];
+    $tmp = $_FILES['foto']['tmp_name'];
+
+    // Validasi Data
+    if(empty($nim) || empty($nama) || empty($jurusan) || empty($alamat)){
+
+        $error = "Semua field harus diisi!";
+
+    }elseif(strlen($nim) < 8 || strlen($nim) > 12){
+
+        $error = "NIM harus antara 8-12 karakter!";
+
+    }elseif(empty($foto)){
+
+        $error = "Foto wajib diupload!";
+
+    }else{
+
+        // Validasi Ekstensi Foto
+        $ekstensi = strtolower(pathinfo($foto, PATHINFO_EXTENSION));
+        $allowed = ['jpg', 'jpeg', 'png'];
+
+        if(!in_array($ekstensi, $allowed)){
+
+            $error = "File harus JPG, JPEG atau PNG!";
+
+        }else{
+
+            // Cek NIM
+            $check = mysqli_query(
+                $conn,
+                "SELECT * FROM mahasiswa WHERE nim='".mysqli_real_escape_string($conn,$nim)."'"
+            );
+
+            if(mysqli_num_rows($check) > 0){
+
+                $error = "NIM sudah terdaftar!";
+
+            }else{
+
+                $nama_foto = time().'_'.$foto;
+
+                move_uploaded_file(
+                    $tmp,
+                    "uploads/".$nama_foto
+                );
+
+                $nim_safe = mysqli_real_escape_string($conn,$nim);
+                $nama_safe = mysqli_real_escape_string($conn,$nama);
+                $jurusan_safe = mysqli_real_escape_string($conn,$jurusan);
+                $alamat_safe = mysqli_real_escape_string($conn,$alamat);
+                $foto_safe = mysqli_real_escape_string($conn,$nama_foto);
+
+                $query = mysqli_query(
+                    $conn,
+                    "INSERT INTO mahasiswa
+                    (nim, nama, jurusan, alamat, foto)
+                    VALUES
+                    (
+                        '$nim_safe',
+                        '$nama_safe',
+                        '$jurusan_safe',
+                        '$alamat_safe',
+                        '$foto_safe'
+                    )"
+                );
+
+                if($query){
+
+                    $success = "Data berhasil disimpan! Mengalihkan...";
+
+                    echo "
+                    <script>
+                        setTimeout(function(){
+                            window.location.href='index.php';
+                        },2000);
+                    </script>
+                    ";
+
+                }else{
+
+                    $error = "Gagal menyimpan data : ".mysqli_error($conn);
+
+                }
+            }
+        }
+    }
+}
+?>
+
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Input Data Mahasiswa</title>
+
+    <style>
+
+        *{
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: Arial, Helvetica, sans-serif;
+        }
+
+        body{
+            background: linear-gradient(135deg, #1f1c2c, #928dab);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 30px;
+            color: white;
+        }
+
+        .container{
+            width: 100%;
+            max-width: 550px;
+            background: rgba(255,255,255,0.08);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 22px;
+            padding: 35px;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.3);
+        }
+
+        .header{
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .header h1{
+            font-size: 34px;
+            margin-bottom: 10px;
+            color: white;
+        }
+
+        .header p{
+            color: #dcdcdc;
+            font-size: 15px;
+        }
+
+        .alert{
+            padding: 14px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        .alert-error{
+            background: rgba(255,77,109,0.15);
+            border: 1px solid rgba(255,77,109,0.5);
+            color: #ffb3c1;
+        }
+
+        .alert-success{
+            background: rgba(0,200,150,0.15);
+            border: 1px solid rgba(0,200,150,0.5);
+            color: #a7ffdd;
+        }
+
+        .form-info{
+            background: rgba(255,255,255,0.08);
+            border-left: 4px solid #ff6ec4;
+            padding: 14px;
+            border-radius: 10px;
+            margin-bottom: 25px;
+            color: #f1f1f1;
+            font-size: 14px;
+        }
+
+        .form-group{
+            margin-bottom: 22px;
+        }
+
+        label{
+            display: block;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+
+        input[type="text"],
+        input[type="file"],
+        textarea{
+            width: 100%;
+            padding: 14px;
+            border-radius: 12px;
+            border: 1px solid rgba(255,255,255,0.15);
+            background: rgba(255,255,255,0.08);
+            color: white;
+            font-size: 14px;
+        }
+
+        textarea{
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .button-group{
+            display: flex;
+            gap: 12px;
+            margin-top: 30px;
+        }
+
+        button,
+        .btn{
+            flex: 1;
+            padding: 14px;
+            border: none;
+            border-radius: 12px;
+            text-align: center;
+            text-decoration: none;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .btn-submit{
+            background: yellow;
+            color: black;
+        }
+
+        .btn-cancel{
+            background: rgba(255,255,255,0.12);
+            color: white;
+        }
+
+    </style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <div class="header">
+        <h1>Input Data Mahasiswa Universitas Pamulang</h1>
+        <p>Masukkan data mahasiswa tahun ajaran baru</p>
+    </div>
+
+    <?php if($error): ?>
+        <div class="alert alert-error">
+            <?php echo $error; ?>
+        </div>
+    <?php endif; ?>
+
+    <?php if($success): ?>
+        <div class="alert alert-success">
+            <?php echo $success; ?>
+        </div>
+    <?php endif; ?>
+
+    <div class="form-info">
+        ℹ️ Pastikan NIM unik dan belum terdaftar dalam sistem
+    </div>
+
+    <form method="POST" enctype="multipart/form-data">
+
+        <div class="form-group">
+            <label>NIM (Nomor Induk Mahasiswa)</label>
+            <input type="text"
+                   name="nim"
+                   placeholder="Contoh : 25101131"
+                   required>
+        </div>
+
+        <div class="form-group">
+            <label>Nama Mahasiswa</label>
+            <input type="text"
+                   name="nama"
+                   placeholder="Masukkan nama lengkap"
+                   required>
+        </div>
+
+        <div class="form-group">
+            <label>Jurusan</label>
+            <input type="text"
+                   name="jurusan"
+                   placeholder="Contoh : Teknik Informatika"
+                   required>
+        </div>
+
+        <div class="form-group">
+            <label>Alamat</label>
+            <textarea name="alamat"
+                      placeholder="Masukkan alamat lengkap"
+                      required></textarea>
+        </div>
+
+        <div class="form-group">
+            <label>Upload Foto Mahasiswa</label>
+            <input type="file"
+                   name="foto"
+                   accept=".jpg,.jpeg,.png"
+                   required>
+        </div>
+
+        <div class="button-group">
+
+            <button type="submit"
+                    name="simpan"
+                    class="btn-submit">
+                💾 Simpan
+            </button>
+
+            <a href="index.php" class="btn btn-cancel">
+                ❌ Batal
+            </a>
+
+        </div>
+
+    </form>
+
+</div>
+
+</body>
+</html>

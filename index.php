@@ -1,0 +1,280 @@
+<?php
+include 'koneksi.php';
+?>
+
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistem Data Mahasiswa</title>
+
+    <style>
+        *{
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: Arial, Helvetica, sans-serif;
+        }
+
+        body{
+            background: linear-gradient(135deg, #1f1c2c, #928dab);
+            min-height: 100vh;
+            padding: 40px;
+            color: white;
+        }
+
+        .container{
+            width: 100%;
+            max-width: 1200px;
+            margin: auto;
+            background: rgba(255,255,255,0.08);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.3);
+        }
+
+        .header{
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .header h1{
+            font-size: 38px;
+            margin-bottom: 10px;
+            color: #ffffff;
+        }
+
+        .header p{
+            color: #dcdcdc;
+            font-size: 16px;
+        }
+
+        .button-container{
+            margin-bottom: 25px;
+            text-align: right;
+        }
+
+        .btn{
+            text-decoration: none;
+            padding: 12px 20px;
+            border-radius: 12px;
+            font-weight: bold;
+            transition: 0.3s;
+            display: inline-block;
+            border: none;
+        }
+
+        .button-container .btn{
+            background: yellow;
+            color: black;
+        }
+
+        .button-container .btn:hover{
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(255,255,255,0.2);
+        }
+
+        table{
+            width: 100%;
+            border-collapse: collapse;
+            overflow: hidden;
+            border-radius: 15px;
+        }
+
+        thead{
+            background: rgba(255,255,255,0.15);
+        }
+
+        thead th{
+            padding: 16px;
+            text-align: center;
+            color: #fff;
+            font-size: 15px;
+        }
+
+        tbody tr{
+            background: rgba(255,255,255,0.05);
+            transition: 0.3s;
+        }
+
+        tbody tr:hover{
+            background: rgba(255,255,255,0.12);
+        }
+
+        tbody td{
+            padding: 15px;
+            text-align: center;
+            color: #f1f1f1;
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+        }
+
+        .foto-mahasiswa{
+            width: 80px;
+            height: 80px;
+            object-fit: cover;
+            border-radius: 10px;
+            border: 2px solid rgba(255,255,255,0.2);
+        }
+
+        .action-cell{
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .btn-edit{
+            background: #00c896;
+            color: white;
+        }
+
+        .btn-edit:hover{
+            background: #00a67d;
+        }
+
+        .btn-delete{
+            background: #ff4d6d;
+            color: white;
+        }
+
+        .btn-delete:hover{
+            background: #e6395c;
+        }
+
+        .no-data{
+            padding: 25px;
+            color: #ddd;
+        }
+
+        .no-data a{
+            color: #ffb3ff;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        @media(max-width: 768px){
+
+            body{
+                padding: 20px;
+            }
+
+            .container{
+                padding: 20px;
+            }
+
+            table{
+                font-size: 14px;
+            }
+
+            .action-cell{
+                flex-direction: column;
+            }
+
+            .header h1{
+                font-size: 28px;
+            }
+
+            .foto-mahasiswa{
+                width: 60px;
+                height: 60px;
+            }
+        }
+
+    </style>
+</head>
+<body>
+
+<div class="container">
+
+    <div class="header">
+        <h1>Website Data Mahasiswa Universitas Pamulang</h1>
+        <p>Simpan data mahasiswa dengan teliti dan cermat</p>
+    </div>
+
+    <div class="button-container">
+        <a href="input.php" class="btn">+ Tambah Data Baru</a>
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th>No.</th>
+                <th>Foto</th>
+                <th>NIM</th>
+                <th>Nama Mahasiswa</th>
+                <th>Jurusan</th>
+                <th>Alamat</th>
+                <th>Aksi</th>
+            </tr>
+        </thead>
+
+        <tbody>
+
+<?php
+$query = mysqli_query($conn, "SELECT * FROM mahasiswa ORDER BY id DESC");
+$no = 1;
+
+if(mysqli_num_rows($query) > 0){
+    while($data = mysqli_fetch_array($query)){
+?>
+
+            <tr>
+                <td><?php echo $no++; ?></td>
+
+                <td>
+                    <?php
+                    if(!empty($data['foto']) && file_exists("uploads/".$data['foto'])){
+                    ?>
+                        <img src="uploads/<?php echo $data['foto']; ?>"
+                             alt="Foto Mahasiswa"
+                             class="foto-mahasiswa">
+                    <?php
+                    }else{
+                        echo "Tidak Ada Foto";
+                    }
+                    ?>
+                </td>
+
+                <td><?php echo htmlspecialchars($data['nim']); ?></td>
+                <td><?php echo htmlspecialchars($data['nama']); ?></td>
+                <td><?php echo htmlspecialchars($data['jurusan']); ?></td>
+                <td><?php echo htmlspecialchars($data['alamat']); ?></td>
+
+                <td class="action-cell">
+                    <a href="edit.php?id=<?php echo $data['id']; ?>" class="btn btn-edit">
+                        Edit
+                    </a>
+
+                    <a href="hapus.php?id=<?php echo $data['id']; ?>"
+                       class="btn btn-delete"
+                       onclick="return confirm('Yakin ingin menghapus data ini?')">
+                        Hapus
+                    </a>
+                </td>
+            </tr>
+
+<?php
+    }
+}else{
+?>
+
+            <tr>
+                <td colspan="7" class="no-data">
+                    Tidak ada data mahasiswa.
+                    <a href="input.php">Tambah data baru</a>
+                </td>
+            </tr>
+
+<?php
+}
+?>
+
+        </tbody>
+    </table>
+
+</div>
+
+</body>
+</html>
